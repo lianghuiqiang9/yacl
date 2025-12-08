@@ -26,7 +26,11 @@ struct DecryptResult {
 
 Ciphertext Encrypt(const yacl::math::MPInt& message, const PublicKey& pk);
 
+Ciphertext RawEncrypt(const yacl::math::MPInt& message, const PublicKey& pk);
+
 DecryptResult Decrypt(const Ciphertext& ciphertext, const PrivateKey& sk);
+
+DecryptResult RawDecrypt(const Ciphertext& ciphertext, const PrivateKey& sk);
 
 DecryptResult ParDecrypt(const Ciphertext& ciphertext, const PrivateKey& sk);
 

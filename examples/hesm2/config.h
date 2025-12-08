@@ -35,5 +35,5 @@ constexpr int Treelen = Imax * 2;  // imax*2
 constexpr uint32_t Cuckoolen = static_cast<uint32_t>(Jmax * 1.3);
 constexpr uint64_t Mmax =
     static_cast<uint64_t>(Imax) * static_cast<uint64_t>(L1) + Jmax;
-
+// 2^{12+21}+2^{20}
 }  // namespace examples::hesm2

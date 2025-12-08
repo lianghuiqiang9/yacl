@@ -25,7 +25,7 @@ class PrivateKey {
  public:
   explicit PrivateKey(std::shared_ptr<yacl::crypto::EcGroup> ec_group)
       : ec_group_(ec_group), public_key_(ec_group_->GetGenerator(), ec_group_) {
-    Initialize();
+    Initialize(); // 显式调用了
   }
 
   const yacl::math::MPInt& GetK() const { return k_; }
@@ -48,7 +48,7 @@ class PrivateKey {
   }
 
   std::shared_ptr<yacl::crypto::EcGroup> ec_group_;
-  yacl::math::MPInt k_;
+  yacl::math::MPInt k_; // 多了一个k
   PublicKey public_key_;
 };
 }  // namespace examples::hesm2
