@@ -71,8 +71,8 @@ std::vector<yacl::math::MPInt> GenOneConcatRandom(
     std::vector<yacl::math::MPInt> result;
     result.reserve(n);
 
-    auto two = yacl::math::MPInt(2);
-    yacl::math::MPInt high_bit = two.Pow(llen);  // 1 << llen
+    //auto two = yacl::math::MPInt(2);
+    yacl::math::MPInt high_bit = yacl::math::MPInt(2).Pow(llen);  // 1 << llen
 
     for (size_t i = 0; i < n; ++i) {
         yacl::math::MPInt ri = yacl::math::MPInt::RandomLtN(lrange);
@@ -118,18 +118,18 @@ int main() {
     // -------------------------------------------------------------------------
     uint32_t xlen = 16;
 
-    auto xrange = yacl::math::MPInt(2);
-    xrange.PowInplace(xlen);
+    auto xrange = yacl::math::MPInt(2).Pow(xlen);
+    //xrange.PowInplace(xlen);
 
-    uint32_t log2n = 14;   // log2n < xlen
+    uint32_t log2n = 10;   // log2n < xlen
     uint32_t n = 1 << log2n;
 
     uint32_t ylen = xlen;
     yacl::math::MPInt yrange = xrange;
 
     uint32_t llen = 32;
-    auto lrange = yacl::math::MPInt(2);
-    lrange.PowInplace(llen);
+    auto lrange = yacl::math::MPInt(2).Pow(llen);
+    //lrange.PowInplace(llen);
 
     std::cout << "log2n=" << log2n
               << ", n=" << n
@@ -190,16 +190,16 @@ int main() {
     auto rVec = GenOneConcatRandom(n, llen, lrange);
     //PrintMPIntV(rVec);
 
-    auto two  = yacl::math::MPInt(2);
-    yacl::math::MPInt one_L = two.Pow(llen);       // 1<<llen
-    yacl::math::MPInt one_L_plus = two.Pow(llen+1);
+    //auto two  = yacl::math::MPInt(2);
+    yacl::math::MPInt one_L = yacl::math::MPInt(2).Pow(llen);       // 1<<llen
+    //yacl::math::MPInt one_L_plus = two.Pow(llen+1);
     //std::cout << "one_bit_pow_llen = " << one_L.ToHexString() << "\n";
 
     std::vector<examples::hesm2::Ciphertext> response;
     response.reserve(n);
     for (uint32_t i = 0; i < n; ++i) {
-        yacl::math::MPInt val = (one_L | yVec[i].second);
-        val = val + rVec[i] * yVec[i].first;
+        //yacl::math::MPInt val = (one_L | yVec[i].second);
+        auto val = yVec[i].second + rVec[i] * yVec[i].first;
         auto c_val = RawEncrypt(val, public_key);
         response.push_back(c_val);
     }
@@ -246,8 +246,8 @@ int main() {
         auto val = answer[i].m;
         //std::cout << "answer[" << i << "] = 0x" << val.ToHexString() << ", success=" << answer[i].success << "\n";
 
-        if (val >= one_L && val < one_L_plus) {
-            actual_ans = val - one_L;
+        if (val >= 0 && val < one_L && answer[i].success) {
+            actual_ans = val;
         }
     }
 
