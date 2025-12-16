@@ -35,3 +35,13 @@ cd examples
 bazel build --linkopt=-ldl //hesm2:test-poly-psi 
 
 ./bazel-bin/hesm2/test-poly-psi
+
+# KeywordPIR-hesm2-srv-poly-sqrt
+
+8. psi-poly-sqrt方案
+
+cd examples
+
+bazel build --linkopt=-ldl //hesm2:test-poly-sqrt-psi 
+
+./bazel-bin/hesm2/test-poly-sqrt-psi

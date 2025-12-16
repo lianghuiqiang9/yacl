@@ -131,3 +131,26 @@ yacl_cc_binary(
         "@yacl//yacl/utils/spi",
     ],
 )
+
+yacl_cc_binary(
+    name = "test-poly-sqrt-psi",
+    srcs = [
+        "ahesm2.cc",
+        "ahesm2.h",
+        "ciphertext.h",
+        "config.cc",
+        "config.h",
+        "test-poly-sqrt-psi.cc",
+        "private_key.h",
+        "public_key.h",
+        "t1.h",
+        "t2.h",
+    ],
+    deps = [
+        "@yacl//yacl/crypto/ecc:spi",
+        "@yacl//yacl/crypto/ecc/openssl",
+        "@yacl//yacl/math/mpint",
+        "@yacl//yacl/utils:cuckoo_index",  # 添加 cuckoo_index 依赖
+        "@yacl//yacl/utils/spi",
+    ],
+)
