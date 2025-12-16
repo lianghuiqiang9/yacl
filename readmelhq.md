@@ -11,6 +11,7 @@
 8. ./bazel-bin/psi/cpp/ecdh_psi_main --rank=1
 
 # KeywordPIR-hesm2
+0. cd examples
 1. 先写在hesm2的库中，然后再迁移到psi
 2. 对hesm2进行性能测试
     bazel build --linkopt=-ldl //hesm2:sm2_runtime_test
@@ -22,5 +23,8 @@ bazel build --linkopt=-ldl //hesm2:test-ec-group-runtime && ./bazel-bin/hesm2/te
 5. 测试全域的hesm2
 bazel build --linkopt=-ldl //hesm2:sm2_example && ./bazel-bin/hesm2/sm2_example
 
-6. 我们的psi方案运行速度
+6. psi方案rE(a)+l
 bazel build --linkopt=-ldl //hesm2:test-psi && ./bazel-bin/hesm2/test-psi
+
+7. psi-poly方案
+bazel build --linkopt=-ldl //hesm2:test-poly-psi && ./bazel-bin/hesm2/test-poly-psi

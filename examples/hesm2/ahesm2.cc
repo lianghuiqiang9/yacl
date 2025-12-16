@@ -57,9 +57,6 @@ Ciphertext RawEncrypt(const yacl::math::MPInt& message, const PublicKey& pk) {
   return Ciphertext{c1, c2};
 }
 
-
-
-
 bool CheckDec(const std::shared_ptr<yacl::crypto::EcGroup>& ecgroup,
               const yacl::crypto::EcPoint& m_g, const yacl::math::MPInt& m) {
   yacl::crypto::EcPoint checkmG = ecgroup->MulBase(m);
@@ -194,6 +191,40 @@ DecryptResult Decrypt(const Ciphertext& ciphertext, const PrivateKey& sk) {
   }
   SPDLOG_INFO("Decrypt failed. |m| should be <= {}", Mmax);
   return {yacl::math::MPInt(0), false};
+}
+
+// c1_sk = c1 * sk = sk * rG = rPK
+// mG = c2 - c1_sk = mG + rPK - sk * rG = mG
+// find m from mG
+DecryptResult ZeroCheck(const Ciphertext& ciphertext, const PrivateKey& sk) {
+  const auto& ec_group = sk.GetEcGroup();
+  auto c1_sk = ec_group->Mul(ciphertext.GetC1(), sk.GetK());
+  const auto& c2 = ciphertext.GetC2();
+  // check m = 0
+  if (ec_group->PointEqual(c1_sk, c2)) {
+    return {yacl::math::MPInt(0), true};
+  }
+  //SPDLOG_INFO("ZeroCheck failed. m is not zero");
+  return {yacl::math::MPInt(-1), false};
+}
+
+// -----------------------------------------------------------------------------
+// Compute the communication size of a ciphertext and optionally print points
+// -----------------------------------------------------------------------------
+// bytes
+uint64_t CiphertextSize(const PublicKey &public_key,
+                              const Ciphertext &cipher) {
+    // Get affine points from the EC group inside public key
+    auto affc1 = public_key.GetEcGroup()->GetAffinePoint(cipher.GetC1());
+    auto affc2 = public_key.GetEcGroup()->GetAffinePoint(cipher.GetC2());
+
+    uint64_t comm_c1 = affc1.GetSerializeLength();
+    uint64_t comm_c2 = affc2.GetSerializeLength();
+
+    uint64_t total_comm = comm_c1 + comm_c2;
+
+
+    return total_comm;
 }
 
 // c1_sk = c1 * sk = sk * rG = rPK

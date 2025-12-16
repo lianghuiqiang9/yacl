@@ -20,27 +20,21 @@ using Pair = std::pair<yacl::math::MPInt, yacl::math::MPInt>;
 std::vector<Pair> GenUniqueY(
     uint32_t n,
     const yacl::math::MPInt& yrange,
-    const yacl::math::MPInt& lrange) 
+    const yacl::math::MPInt& lrange)
 {
+    if (yacl::math::MPInt(n) >= yrange) {
+        throw std::invalid_argument("n must be < yrange");
+    }
+
+    std::unordered_set<yacl::math::MPInt> used;
     std::vector<Pair> Y;
     Y.reserve(n);
 
-    if (yacl::math::MPInt(n) >= yrange) {
-        std::cout << "Failed: n = " << n
-                  << " must be smaller than yrange = " << yrange << "\n";
-        return {};
-    }
-
-    std::unordered_set<std::string> used; // track unique y values
-
     while (Y.size() < n) {
-        yacl::math::MPInt y = yacl::math::MPInt::RandomLtN(yrange);
-        std::string key = y.ToString();
+        auto y = yacl::math::MPInt::RandomLtN(yrange);
+        if (!used.insert(y).second) continue;
 
-        if (used.count(key)) continue;
-        used.insert(key);
-
-        yacl::math::MPInt l = yacl::math::MPInt::RandomLtN(lrange);
+        auto l = yacl::math::MPInt::RandomLtN(lrange);
         Y.emplace_back(y, l);
     }
 
@@ -116,12 +110,12 @@ int main() {
     // -------------------------------------------------------------------------
     // Step 0: data and parameter initialization
     // -------------------------------------------------------------------------
-    uint32_t xlen = 16;
+    uint32_t xlen = 5;
 
     auto xrange = yacl::math::MPInt(2).Pow(xlen);
     //xrange.PowInplace(xlen);
 
-    uint32_t log2n = 10;   // log2n < xlen
+    uint32_t log2n = 4;   // log2n < xlen
     uint32_t n = 1 << log2n;
 
     uint32_t ylen = xlen;

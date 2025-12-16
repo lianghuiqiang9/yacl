@@ -39,7 +39,7 @@ int main() {
     auto point = ec_group->GetGenerator();
     
     
-    auto n_sub_1G = ec_group->MulBase(k);
+    auto n_sub_1G = ec_group->Mul(point, k);
     auto nG = ec_group->Add(point,n_sub_1G);
     auto affnG = ec_group->GetAffinePoint(nG);
     std::cout<<"affnG: "<<affnG<<std::endl;

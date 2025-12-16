@@ -43,4 +43,8 @@ Ciphertext HSub(const Ciphertext& ciphertext1, const Ciphertext& ciphertext2,
 Ciphertext HMul(const Ciphertext& ciphertext1, const yacl::math::MPInt& scalar,
                 const PublicKey& pk);
 
+DecryptResult ZeroCheck(const Ciphertext& ciphertext, const PrivateKey& sk);
+
+uint64_t CiphertextSize(const PublicKey &public_key, const Ciphertext &cipher);
+
 }  // namespace examples::hesm2
