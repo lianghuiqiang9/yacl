@@ -26,5 +26,12 @@ bazel build --linkopt=-ldl //hesm2:sm2_example && ./bazel-bin/hesm2/sm2_example
 6. psi方案rE(a)+l
 bazel build --linkopt=-ldl //hesm2:test-psi && ./bazel-bin/hesm2/test-psi
 
+# KeywordPIR-hesm2-srv-poly
+
 7. psi-poly方案
-bazel build --linkopt=-ldl //hesm2:test-poly-psi && ./bazel-bin/hesm2/test-poly-psi
+
+cd examples
+
+bazel build --linkopt=-ldl //hesm2:test-poly-psi 
+
+./bazel-bin/hesm2/test-poly-psi
