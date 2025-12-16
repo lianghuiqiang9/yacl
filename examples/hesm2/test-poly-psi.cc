@@ -319,9 +319,9 @@ int main() {
     // -------------------------------------------------------------------------
     // Step 2: Server computes:
     // offline
-    //   P(y) = a_0 + a_1 * y + ... + a_{n-1} * y_{n-1}
+    //   P(y) = a_0 + a_1 * y + ... + a_{n} * y_{n}
     //   P(y_0) = l_0, ..., P(y_{n-1}) = l_{n-1}
-    //   Q(y) = b_0 + b_1 * y + ... + b_{n-1} * y_{n-1}
+    //   Q(y) = b_0 + b_1 * y + ... + b_{n} * y_{n}
     //   Q(y_0) = 0, ..., Q(y_{n-1}) = 0
     // online
     //   E(P(x))
@@ -329,10 +329,10 @@ int main() {
     // -------------------------------------------------------------------------
 
     start = std::chrono::high_resolution_clock::now();
-    // a_0, ..., a_{n-1}
+    // a_0, ..., a_{n}
     auto coeffs_poly_P = GetInterpolatingPolynomialCoefficientsNewton(Y, Order);
 
-    // b_0,..., b_{n-1}
+    // b_0,..., b_{n}
     auto coeffs_poly_Q = ProductPolyDivConq(Y.y, 0, Y.y.size()-1, Order);
 
     auto c_membership_test = RawEncrypt(coeffs_poly_Q[0], public_key);
