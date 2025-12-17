@@ -45,3 +45,7 @@ cd examples
 bazel build --linkopt=-ldl //hesm2:test-poly-sqrt-psi 
 
 ./bazel-bin/hesm2/test-poly-sqrt-psi
+
+# Next work
+1. 如何优化掉多项式Q和ZeroCheck，利用Decrypt暴力搜索value的范围去判断
+2. 规范化代码
