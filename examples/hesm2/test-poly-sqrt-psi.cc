@@ -145,58 +145,6 @@ yacl::math::MPInt EvaluatePolynomial(
 }
 
 // -----------------------------------------------------------------------------
-// 计算多项式 ∏(x - y_i) 的系数
-// -----------------------------------------------------------------------------
-
-// 递归乘法法 - 最直观的方法
-std::vector<yacl::math::MPInt> ProductPolyRec(
-    const std::vector<yacl::math::MPInt>& y_values,
-    const yacl::math::MPInt& Order)
-{
-    if (y_values.empty()) {
-        // 空乘积等于1
-        return { yacl::math::MPInt::_1_ };
-    }
-    
-    // 递归计算: (x - y_0) * (x - y_1) * ... * (x - y_{n-1})
-    // 从最内层开始构建多项式
-    std::vector<yacl::math::MPInt> result = { 
-        (Order - y_values[0]) % Order,  // 常数项: -y_0
-        yacl::math::MPInt::_1_          // 一次项系数: 1
-    };
-    
-    // 依次乘以每个 (x - y_i)
-    for (size_t i = 1; i < y_values.size(); ++i) {
-        MultiplyByLinearFactor(result, y_values[i], Order);
-    }
-    
-    return result;
-}
-
-// 分治法构造 ∏(x - y_i)
-std::vector<yacl::math::MPInt> ProductPolyDivConq(
-    const std::vector<yacl::math::MPInt>& y_values,
-    size_t l, size_t r,
-    const yacl::math::MPInt& Order) {
-
-    if (l > r) return {yacl::math::MPInt::_1_};
-    if (l == r) return {(Order - y_values[l]) % Order, yacl::math::MPInt::_1_};
-
-    size_t m = (l + r) / 2;
-    auto left = ProductPolyDivConq(y_values, l, m, Order);
-    auto right = ProductPolyDivConq(y_values, m+1, r, Order);
-
-    // multiply left * right
-    std::vector<yacl::math::MPInt> res(left.size() + right.size() - 1, yacl::math::MPInt::_0_);
-    for (size_t i = 0; i < left.size(); ++i)
-        for (size_t j = 0; j < right.size(); ++j)
-            res[i+j] = (res[i+j] + left[i] * right[j]) % Order;
-
-    return res;
-}
-
-
-// -----------------------------------------------------------------------------
 // Print vector 
 // -----------------------------------------------------------------------------
 void PrintPointSet(const PointSet& Y) {
@@ -233,11 +181,11 @@ int main() {
     // Step 0: data and parameter initialization
     // -------------------------------------------------------------------------
     // client
-    uint32_t xlen = 11;
+    uint32_t xlen = 16;
     auto xrange = yacl::math::MPInt(2).Pow(xlen);
 
     // server
-    uint32_t log2n = 10;   // log2n < xlen
+    uint32_t log2n = 12;   // log2n < xlen
     uint32_t n = 1 << log2n;
     uint32_t ylen = xlen;
     yacl::math::MPInt yrange = xrange;
@@ -326,28 +274,16 @@ int main() {
     // offline
     //   P(y) = a_0 + a_1 * y + ... + a_{n} * y_{n}
     //   P(y_0) = l_0, ..., P(y_{n-1}) = l_{n-1}
-    //   Q(y) = b_0 + b_1 * y + ... + b_{n} * y_{n}
-    //   Q(y_0) = 0, ..., Q(y_{n-1}) = 0
     // online
     //   E(P(x))
-    //   E(Q(x))
     // -------------------------------------------------------------------------
 
     start = std::chrono::high_resolution_clock::now();
     // a_0, ..., a_{n}
-    auto coeffs_poly_P = GetInterpolatingPolynomialCoefficientsNewton(Y, Order);
-
-    // b_0,..., b_{n}
-    auto coeffs_poly_Q = ProductPolyDivConq(Y.y, 0, Y.y.size()-1, Order);
-
-    std::vector<examples::hesm2::Ciphertext> c_membership_test_vec;
-    c_membership_test_vec.reserve(t);
+    auto coeffs = GetInterpolatingPolynomialCoefficientsNewton(Y, Order);
 
     std::vector<examples::hesm2::Ciphertext> response_vec;
     response_vec.reserve(t);
-
-    //auto c_membership_test = RawEncrypt(coeffs_poly_Q[0], public_key);
-    //auto response = RawEncrypt(coeffs_poly_P[0], public_key);
 
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -356,27 +292,16 @@ int main() {
 
     start = std::chrono::high_resolution_clock::now();
     for (uint32_t i = 0; i < t; ++i) {
-        auto temp = HMul(c_X[0], coeffs_poly_Q[s*i+1], public_key);
-        for (uint32_t j = 1; j < s; ++j){
-            auto v = HMul(c_X[j], coeffs_poly_Q[s*i+j+1], public_key);
-            temp = HAdd(temp, v, public_key);
-        }
-        c_membership_test_vec.push_back(temp);
-    }
-    auto c_constant_coeffs_poly_Q = RawEncrypt(coeffs_poly_Q[0], public_key);
-    c_membership_test_vec[0] = HAdd(c_membership_test_vec[0], c_constant_coeffs_poly_Q, public_key);
-
-    for (uint32_t i = 0; i < t; ++i) {
-        auto temp = HMul(c_X[0], coeffs_poly_P[s*i+1], public_key);
+        auto temp = HMul(c_X[0], coeffs[s*i+1], public_key);
         for (uint32_t j = 1; j < s; ++j){
             if (s*i+j+1==n) continue;
-            auto v = HMul(c_X[j], coeffs_poly_P[s*i+j+1], public_key);
+            auto v = HMul(c_X[j], coeffs[s*i+j+1], public_key);
             temp = HAdd(temp, v, public_key);
         }
         response_vec.push_back(temp);
     }  
-    auto c_constant_coeffs_poly_P = RawEncrypt(coeffs_poly_P[0], public_key);
-    response_vec[0] = HAdd(response_vec[0], c_constant_coeffs_poly_P, public_key);
+    auto c_constant_coeffs = RawEncrypt(coeffs[0], public_key);
+    response_vec[0] = HAdd(response_vec[0], c_constant_coeffs, public_key);
 
     //std::cout<<"**"<<std::endl;
     end = std::chrono::high_resolution_clock::now();
@@ -385,7 +310,6 @@ int main() {
               << duration.count() << " ms" << std::endl;
     uint64_t server_comm = 0;
     for (uint32_t i = 0; i < response_vec.size(); ++i) {
-        server_comm = server_comm + CiphertextSize(public_key, c_membership_test_vec[i]);
         server_comm = server_comm + CiphertextSize(public_key, response_vec[i]);
     }
     std::cout << "Step 2, server_comm: " << std::fixed 
@@ -397,38 +321,14 @@ int main() {
     // Step 3: Client decrypts
     // -------------------------------------------------------------------------
     start = std::chrono::high_resolution_clock::now();
-    auto c_membership_test = c_membership_test_vec[0]; 
-    auto x_s = X.back();
-    for (uint32_t i = 1; i < t; ++i) {
-        auto temp = HMul(c_membership_test_vec[i], x_s, public_key);
-        c_membership_test = HAdd(c_membership_test, temp, public_key);
-
-        x_s = x_s * X.back();
-        x_s = x_s.Mod(Order);
-    }
-
-    auto membership_test = ZeroCheck(c_membership_test, private_key);
-
-    if (membership_test.m !=0) {
-        std::cout << "membership_test.m: "<< membership_test.m << ", membership_test.success: "<< membership_test.success << std::endl;
-        std::cout << "x is not in Y. "<<std::endl;
-        
-        end = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        std::cout << "Step 3, client decrypts computation time: "
-                  << duration.count() << " ms" << std::endl;
-
-        return 0;
-    }
-
     auto response = response_vec[0]; 
-    x_s = X.back();
+    auto xs = X.back();
     for (uint32_t i = 1; i < t; ++i) {
-        auto temp = HMul(response_vec[i], x_s, public_key);
+        auto temp = HMul(response_vec[i], xs, public_key);
         response = HAdd(response, temp, public_key);
 
-        x_s = x_s * X.back();
-        x_s = x_s.Mod(Order);
+        xs = xs * X.back();
+        xs = xs.Mod(Order);
     }
 
     auto actual_ans = Decrypt(response, private_key);
@@ -438,11 +338,11 @@ int main() {
     std::cout << "Step 3, client decrypts computation time: "
               << duration.count() << " ms" << std::endl;
 
-    std::cout << "x = " << x << ", actual_ans = " << actual_ans.m << "\n";
+    std::cout << "x = " << x << ", actual_ans = " << actual_ans.m << " , actual_ans.success = "<<actual_ans.success << "\n";
     // -------------------------------------------------------------------------
     // Step 4: Plaintext check
     // -------------------------------------------------------------------------
-    auto expect_ans = yacl::math::MPInt(-1);
+    auto expect_ans = yacl::math::MPInt(0);
 
     for (uint32_t i = 0; i < n; ++i) {
         if (x == Y.y[i]) {

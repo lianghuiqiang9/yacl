@@ -27,6 +27,8 @@
 
 namespace examples::hesm2 {
 
+// 生成[0, Imax]的向量
+// T2[i] = -i * ( 2 * Jmax ) *G
 class T2 {
  public:
   explicit T2(std::shared_ptr<yacl::crypto::EcGroup> ec_group,

@@ -29,6 +29,9 @@
 
 namespace examples::hesm2 {
 
+// 生成 [1, Jmax] 的 cuckoo 表 
+// t1( j * G ) = j
+
 class CuckooT1 {
  public:
   explicit CuckooT1(int jmax)

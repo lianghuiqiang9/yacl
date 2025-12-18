@@ -28,6 +28,7 @@ uint32_t GetSubBytesAsUint32(const yacl::Buffer& bytes, size_t start,
   return result;
 }
 
+// 生成 [1, Jmax] 的 cuckoo 表 
 CuckooT1 t1_loaded(Jmax);
 T2 t2_loaded(nullptr, false);
 

@@ -145,58 +145,6 @@ yacl::math::MPInt EvaluatePolynomial(
 }
 
 // -----------------------------------------------------------------------------
-// 计算多项式 ∏(x - y_i) 的系数
-// -----------------------------------------------------------------------------
-
-// 递归乘法法 - 最直观的方法
-std::vector<yacl::math::MPInt> ProductPolyRec(
-    const std::vector<yacl::math::MPInt>& y_values,
-    const yacl::math::MPInt& Order)
-{
-    if (y_values.empty()) {
-        // 空乘积等于1
-        return { yacl::math::MPInt::_1_ };
-    }
-    
-    // 递归计算: (x - y_0) * (x - y_1) * ... * (x - y_{n-1})
-    // 从最内层开始构建多项式
-    std::vector<yacl::math::MPInt> result = { 
-        (Order - y_values[0]) % Order,  // 常数项: -y_0
-        yacl::math::MPInt::_1_          // 一次项系数: 1
-    };
-    
-    // 依次乘以每个 (x - y_i)
-    for (size_t i = 1; i < y_values.size(); ++i) {
-        MultiplyByLinearFactor(result, y_values[i], Order);
-    }
-    
-    return result;
-}
-
-// 分治法构造 ∏(x - y_i)
-std::vector<yacl::math::MPInt> ProductPolyDivConq(
-    const std::vector<yacl::math::MPInt>& y_values,
-    size_t l, size_t r,
-    const yacl::math::MPInt& Order) {
-
-    if (l > r) return {yacl::math::MPInt::_1_};
-    if (l == r) return {(Order - y_values[l]) % Order, yacl::math::MPInt::_1_};
-
-    size_t m = (l + r) / 2;
-    auto left = ProductPolyDivConq(y_values, l, m, Order);
-    auto right = ProductPolyDivConq(y_values, m+1, r, Order);
-
-    // multiply left * right
-    std::vector<yacl::math::MPInt> res(left.size() + right.size() - 1, yacl::math::MPInt::_0_);
-    for (size_t i = 0; i < left.size(); ++i)
-        for (size_t j = 0; j < right.size(); ++j)
-            res[i+j] = (res[i+j] + left[i] * right[j]) % Order;
-
-    return res;
-}
-
-
-// -----------------------------------------------------------------------------
 // Print vector 
 // -----------------------------------------------------------------------------
 void PrintPointSet(const PointSet& Y) {
@@ -294,7 +242,7 @@ int main() {
 
     auto start = std::chrono::high_resolution_clock::now();
     std::vector<examples::hesm2::Ciphertext> c_X;
-    c_X.reserve(n);
+    c_X.reserve(n-1);
     for (size_t i = 0; i < X.size(); ++i) {
         auto temp = RawEncrypt(X[i], public_key);
         c_X.push_back(temp);
@@ -319,24 +267,18 @@ int main() {
     // -------------------------------------------------------------------------
     // Step 2: Server computes:
     // offline
-    //   P(y) = a_0 + a_1 * y + ... + a_{n} * y_{n}
+    //   P(y) = a_0 + a_1 * y + ... + a_{n-1} * y_{n-1}
     //   P(y_0) = l_0, ..., P(y_{n-1}) = l_{n-1}
-    //   Q(y) = b_0 + b_1 * y + ... + b_{n} * y_{n}
-    //   Q(y_0) = 0, ..., Q(y_{n-1}) = 0
     // online
     //   E(P(x))
-    //   E(Q(x))
     // -------------------------------------------------------------------------
 
     start = std::chrono::high_resolution_clock::now();
     // a_0, ..., a_{n}
-    auto coeffs_poly_P = GetInterpolatingPolynomialCoefficientsNewton(Y, Order);
+    auto coeffs= GetInterpolatingPolynomialCoefficientsNewton(Y, Order);
+    //std::cout<<"coeffs.size(): "<<coeffs.size()<<std::endl;
 
-    // b_0,..., b_{n}
-    auto coeffs_poly_Q = ProductPolyDivConq(Y.y, 0, Y.y.size()-1, Order);
-
-    auto c_membership_test = RawEncrypt(coeffs_poly_Q[0], public_key);
-    auto response = RawEncrypt(coeffs_poly_P[0], public_key);
+    auto response = RawEncrypt(coeffs[0], public_key);
 
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -345,11 +287,7 @@ int main() {
 
     start = std::chrono::high_resolution_clock::now();
     for (uint32_t i = 0; i < n; ++i) {
-        auto temp = HMul(c_X[i], coeffs_poly_Q[i+1], public_key);
-        c_membership_test = HAdd(c_membership_test, temp, public_key);
-    }
-    for (uint32_t i = 0; i < n; ++i) {
-        auto temp = HMul(c_X[i], coeffs_poly_P[i+1], public_key);
+        auto temp = HMul(c_X[i], coeffs[i+1], public_key);
         response = HAdd(response, temp, public_key);
     }    
     end = std::chrono::high_resolution_clock::now();
@@ -357,7 +295,7 @@ int main() {
     std::cout << "Step 2, server online computation time: "
               << duration.count() << " ms" << std::endl;
 
-    auto server_comm = CiphertextSize(public_key, c_membership_test) + CiphertextSize(public_key, response);
+    auto server_comm = CiphertextSize(public_key, response);
     std::cout << "Step 2, server_comm: " << std::fixed 
                                          << std::setprecision(2)
                                          << server_comm / 1024.0
@@ -367,19 +305,6 @@ int main() {
     // Step 3: Client decrypts
     // -------------------------------------------------------------------------
     start = std::chrono::high_resolution_clock::now();
-    auto membership_test = ZeroCheck(c_membership_test, private_key);
-
-    if (membership_test.m !=0) {
-        std::cout << "membership_test.m: "<< membership_test.m << ", membership_test.success: "<< membership_test.success << std::endl;
-        std::cout << "x is not in Y. "<<std::endl;
-        
-        end = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        std::cout << "Step 3, client decrypts computation time: "
-                  << duration.count() << " ms" << std::endl;
-
-        return 0;
-    }
 
     auto actual_ans = Decrypt(response, private_key);
 

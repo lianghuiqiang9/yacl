@@ -19,12 +19,22 @@
 3. 实现两个，一个是简单的，另一个是sqrt优化的
 
 4. 测试ec-group的速度
-bazel build --linkopt=-ldl //hesm2:test-ec-group-runtime && ./bazel-bin/hesm2/test-ec-group-runtime
+
+bazel build --linkopt=-ldl //hesm2:test-ec-group-runtime 
+
+ ./bazel-bin/hesm2/test-ec-group-runtime
+
 5. 测试全域的hesm2
-bazel build --linkopt=-ldl //hesm2:sm2_example && ./bazel-bin/hesm2/sm2_example
+
+bazel build --linkopt=-ldl //hesm2:sm2_example 
+
+ ./bazel-bin/hesm2/sm2_example
 
 6. psi方案rE(a)+l
-bazel build --linkopt=-ldl //hesm2:test-psi && ./bazel-bin/hesm2/test-psi
+
+bazel build --linkopt=-ldl //hesm2:test-psi 
+
+./bazel-bin/hesm2/test-psi
 
 # KeywordPIR-hesm2-srv-poly
 
@@ -46,6 +56,3 @@ bazel build --linkopt=-ldl //hesm2:test-poly-sqrt-psi
 
 ./bazel-bin/hesm2/test-poly-sqrt-psi
 
-# Next work
-1. 如何优化掉多项式Q和ZeroCheck，利用Decrypt暴力搜索value的范围去判断
-2. 规范化代码

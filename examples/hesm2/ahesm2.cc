@@ -238,6 +238,8 @@ DecryptResult RawDecrypt(const Ciphertext& ciphertext, const PrivateKey& sk) {
   if (ec_group->PointEqual(c1_sk, c2)) {
     return {yacl::math::MPInt(0), true};
   }
+
+  // check m \in t1
   auto mG = ec_group->Sub(c2, c1_sk);
   auto affmG = ec_group->GetAffinePoint(mG);
   auto affmGx = affmG.x;
@@ -252,6 +254,8 @@ DecryptResult RawDecrypt(const Ciphertext& ciphertext, const PrivateKey& sk) {
       return {-(m), true};
     }
   }
+
+  // check m \in t2
   yacl::math::MPInt m;  // Declare the variable 'm'
   const auto& t2 = t2_loaded.GetVector();
   std::vector<yacl::math::MPInt> Z(Imax);
@@ -267,6 +271,7 @@ DecryptResult RawDecrypt(const Ciphertext& ciphertext, const PrivateKey& sk) {
       }
     }
   }
+
   std::vector<yacl::math::MPInt> ZTree(Treelen);
   for (int i = 0; i < Imax; i++) {
     ZTree[i] = Z[i];
@@ -356,6 +361,8 @@ DecryptResult RawDecrypt(const Ciphertext& ciphertext, const PrivateKey& sk) {
   //SPDLOG_INFO("Decrypt failed. |m| should be <= {}", Mmax);
   return {yacl::math::MPInt(0), false};
 }
+
+
 
 DecryptResult search(int start, int end, const yacl::math::MPInt& affm_gx,
                      const yacl::math::MPInt& affm_gy,
