@@ -1,0 +1,23 @@
+load("@yacl//bazel:yacl.bzl", "yacl_cc_binary", "yacl_cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+
+yacl_cc_library(
+    name = "kpir",
+    srcs = ["kpir.cc",],
+    hdrs = ["kpir.h",],
+    deps = [
+        "//hesm2:hesm2", 
+    ],
+)
+
+yacl_cc_binary(
+    name = "hesm2_kpir_example",
+    srcs = [
+        "main.cc",
+    ],
+    deps = [
+        ":kpir",
+    ],
+)

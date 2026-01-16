@@ -14,17 +14,6 @@
 
 #include "hesm2/ahesm2.h"
 
-#include <atomic>
-
-#include "hesm2/ciphertext.h"
-#include "hesm2/config.h"
-#include "hesm2/private_key.h"
-#include "hesm2/t1.h"
-#include "hesm2/t2.h"
-
-#include "yacl/crypto/ecc/ec_point.h"
-#include "yacl/math/mpint/mp_int.h"
-
 namespace examples::hesm2 {
 
 // (rG, mG + rPK)

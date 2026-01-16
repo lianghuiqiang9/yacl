@@ -14,8 +14,13 @@
 
 #pragma once
 
+#include <atomic>
+
 #include "hesm2/ciphertext.h"
+#include "hesm2/config.h"
 #include "hesm2/private_key.h"
+#include "hesm2/t1.h"
+#include "hesm2/t2.h"
 
 namespace examples::hesm2 {
 
