@@ -123,7 +123,7 @@ std::vector<Ciphertext> PolyKPIR::Answer(const PublicKey& pk,
                                          const std::vector<Ciphertext>& cipherX, 
                                          const Database& db, 
                                          uint32_t s) {
-    auto order = pk.GetEcGroup()->GetOrder();
+    //auto order = pk.GetEcGroup()->GetOrder();
     uint32_t n = db.Y.size();
     uint32_t t = (n + s - 1) / s;
 
