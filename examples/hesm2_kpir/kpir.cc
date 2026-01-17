@@ -1,4 +1,4 @@
-#include "kpir/kpir.h"
+#include "hesm2_kpir/kpir.h"
 #include <unordered_set>
 
 namespace examples::kpir {
@@ -91,15 +91,16 @@ void Database::GetCoeffs(const yacl::math::MPInt& order) {
 
 }
 
-std::unique_ptr<examples::hesm2::PrivateKey> PolyKPIR::Setup() {
-    examples::hesm2::InitializeConfig();
-    auto ec_group = yacl::crypto::EcGroupFactory::Instance().Create(
-        "sm2", yacl::ArgLib = "openssl");
-
-    return std::make_unique<examples::hesm2::PrivateKey>(std::move(ec_group));
+yacl::math::MPInt Database::GetVal(const yacl::math::MPInt& x){
+    for (size_t i = 0; i < Y.size(); ++i) {
+        if (x == Y[i]) return L[i];
+    }
+    return yacl::math::MPInt::_0_;
 }
 
-PolyKPIR::QueryState PolyKPIR::Query(const PublicKey& pk, const yacl::math::MPInt& x, uint32_t s) {
+PolyKPIR::QueryState PolyKPIR::Query(const PublicKey& pk, 
+                                     const yacl::math::MPInt& x, 
+                                     uint32_t s) {
     auto order = pk.GetEcGroup()->GetOrder();
     
     std::vector<yacl::math::MPInt> plainX;
@@ -144,29 +145,6 @@ std::vector<Ciphertext> PolyKPIR::Answer(const PublicKey& pk,
     return response;
 }
 
-/*
-yacl::math::MPInt PolyKPIR::Recover(const PrivateKey& sk, 
-                                    const std::vector<Ciphertext>& response,
-                                    const std::vector<yacl::math::MPInt>& plainX) {
-    const auto& pk = sk.GetPublicKey();
-    auto order = pk.GetEcGroup()->GetOrder();
-    auto Result = response[0];
-    auto xPowS = plainX.back(); // x^s
-                                        
-    for (size_t i = 1; i < response.size(); ++i) {
-        //  response[i] * (x^s)^i
-        auto term = HMul(response[i], xPowS, pk);
-        Result = HAdd(Result, term, pk);
-        if (i < response.size() - 1) {
-            xPowS = (xPowS * plainX.back()) % order;
-        }
-    }
-
-    auto plainResult = Decrypt(Result, sk);
-    return plainResult.m;
-}
-*/
-
 yacl::math::MPInt PolyKPIR::Recover(const PrivateKey& sk, 
                                     const std::vector<Ciphertext>& response,
                                     const std::vector<yacl::math::MPInt>& plainX) {
@@ -184,15 +162,8 @@ yacl::math::MPInt PolyKPIR::Recover(const PrivateKey& sk,
         Result = HAdd(response[i], shifted, pk);
     }
 
-    auto plainResult = Decrypt(Result, sk);
+    auto plainResult = RawDecrypt(Result, sk);
     return plainResult.m;
-}
-
-bool PolyKPIR::Verify(const yacl::math::MPInt& x, const Database& db, const yacl::math::MPInt& result) {
-    for (size_t i = 0; i < db.Y.size(); ++i) {
-        if (x == db.Y[i]) return result == db.L[i];
-    }
-    return result == yacl::math::MPInt(-1);
 }
 
 

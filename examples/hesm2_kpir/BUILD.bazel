@@ -4,7 +4,7 @@ package(default_visibility = ["//visibility:public"])
 
 
 yacl_cc_library(
-    name = "kpir",
+    name = "hesm2_kpir",
     srcs = ["kpir.cc",],
     hdrs = ["kpir.h",],
     deps = [
@@ -13,11 +13,11 @@ yacl_cc_library(
 )
 
 yacl_cc_binary(
-    name = "hesm2_kpir_example",
+    name = "kpir_example",
     srcs = [
         "main.cc",
     ],
     deps = [
-        ":kpir",
+        ":hesm2_kpir",
     ],
 )

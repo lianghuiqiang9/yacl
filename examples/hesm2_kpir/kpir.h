@@ -17,12 +17,11 @@ public:
     void MultiplyByLinearFactor(std::vector<yacl::math::MPInt>& coeffs, 
                                 const yacl::math::MPInt& a, 
                                 const yacl::math::MPInt& order);
+    yacl::math::MPInt GetVal(const yacl::math::MPInt& x);
 };
 
 class PolyKPIR {
 public:
-
-    static std::unique_ptr<examples::hesm2::PrivateKey> Setup();
 
     struct QueryState {
         std::vector<Ciphertext> cipherX;
@@ -40,11 +39,6 @@ public:
     static yacl::math::MPInt Recover(const PrivateKey& sk, 
                                      const std::vector<Ciphertext>& response,
                                      const std::vector<yacl::math::MPInt>& plainX);
-
-    static bool Verify(const yacl::math::MPInt& x, 
-                        const Database& db, 
-                        const yacl::math::MPInt& result);
-
 };
 
 } // namespace examples::hesm2_kpir
